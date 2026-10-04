@@ -13,16 +13,20 @@ export async function GET(request) {
 
   const command = [
     "set -u",
-    "echo '=== MATCHING CONTAINERS ==='",
-    "docker ps -a --format '{{.Names}}|{{.Image}}|{{.Status}}|{{.Ports}}' | grep -Ei 'dogu|stambol|mcp|edge|nginx' || true",
-    "echo '=== LISTENERS ==='",
-    "ss -lntp 2>/dev/null | grep -E ':(80|443|3000|3001|8787|8080|8081)\\b' || true",
-    "echo '=== EDGE LOGS ==='",
-    "docker logs --tail 120 stambol-edge 2>&1 || true",
-    "echo '=== DOGU RECOVERY LOGS ==='",
-    "docker logs --tail 80 dogu-recovery-mcp 2>&1 || true",
-    "echo '=== CANDIDATE DOGU LOGS ==='",
-    "for n in $(docker ps -a --format '{{.Names}}' | grep -Ei 'dogu|mcp' | head -20); do echo ---$n---; docker logs --tail 60 $n 2>&1 || true; done"
+    "echo '=== APP INSPECT ==='",
+    "docker inspect dogu-next-app --format 'Status={{.State.Status}} Error={{.State.Error}} Exit={{.State.ExitCode}} Started={{.State.StartedAt}} Finished={{.State.FinishedAt}} Image={{.Config.Image}} Cmd={{json .Config.Cmd}} Entrypoint={{json .Config.Entrypoint}} Restart={{.HostConfig.RestartPolicy.Name}}' 2>&1 || true",
+    "echo '=== APP ENV NAMES ==='",
+    "docker inspect dogu-next-app --format '{{range .Config.Env}}{{println .}}{{end}}' 2>/dev/null | cut -d= -f1 | sort | grep -Ei 'DOGU|OPENBAO|PORT|HOST|NODE|NEXT|DATABASE|SUPABASE' || true",
+    "echo '=== APP MOUNTS ==='",
+    "docker inspect dogu-next-app --format '{{range .Mounts}}{{println .Type .Source \"->\" .Destination}}{{end}}' 2>&1 || true",
+    "echo '=== APP NETWORKS ==='",
+    "docker inspect dogu-next-app --format '{{json .NetworkSettings.Networks}}' 2>&1 || true",
+    "echo '=== APP LOGS ==='",
+    "docker logs --tail 180 dogu-next-app 2>&1 || true",
+    "echo '=== EDGE INSPECT ==='",
+    "docker inspect dogu-next-edge --format 'Status={{.State.Status}} Networks={{json .NetworkSettings.Networks}} Mounts={{json .Mounts}}' 2>&1 || true",
+    "echo '=== EDGE CONFIG ==='",
+    "docker exec dogu-next-edge sh -lc 'nginx -T 2>&1 | sed -n \"1,260p\"' 2>&1 || true"
   ].join("; ");
 
   try {
