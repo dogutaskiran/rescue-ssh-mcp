@@ -1,0 +1,22 @@
+{
+  "name": "rescue-ssh-mcp",
+  "version": "0.2.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server": "^2.0.0",
+    "mcp-handler": "^2.2.0",
+    "next": "^16.0.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "ssh2": "^1.17.0",
+    "zod": "^4.6.5"
+  }
+}
