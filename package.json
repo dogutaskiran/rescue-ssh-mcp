@@ -8,7 +8,7 @@
     "start": "next start"
   },
   "engines": {
-    "node": ">=20"
+    "node": "22.x"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "^2.0.0",
