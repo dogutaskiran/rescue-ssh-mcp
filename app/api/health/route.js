@@ -1,40 +1,39 @@
+import { getAuthSecret } from "../../../src/config.js";
+import { runSsh } from "../../../src/ssh.js";
+
+export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
+export const maxDuration = 90;
 
-async function inspect(url) {
-  try {
-    const response = await fetch(url, {
-      redirect: "manual",
-      cache: "no-store",
-      signal: AbortSignal.timeout(10000)
-    });
-    const body = await response.text();
-    return {
-      status: response.status,
-      headers: {
-        "www-authenticate": response.headers.get("www-authenticate"),
-        "content-type": response.headers.get("content-type"),
-        "location": response.headers.get("location")
-      },
-      body: body.slice(0, 2000)
-    };
-  } catch (error) {
-    return { error: error instanceof Error ? error.message : String(error) };
+export async function GET(request) {
+  const url = new URL(request.url);
+  if (url.searchParams.get("key") !== getAuthSecret()) {
+    return Response.json({ error: "unauthorized" }, { status: 401 });
   }
-}
 
-export async function GET() {
-  const [mcp, mcpMeta, consoleMeta] = await Promise.all([
-    inspect("https://mcp.dogu.one/mcp"),
-    inspect("https://mcp.dogu.one/.well-known/oauth-protected-resource"),
-    inspect("https://console.dogu.one/.well-known/oauth-protected-resource")
-  ]);
+  const command = [
+    "set -u",
+    "echo '=== MATCHING CONTAINERS ==='",
+    "docker ps -a --format '{{.Names}}|{{.Image}}|{{.Status}}|{{.Ports}}' | grep -Ei 'dogu|stambol|mcp|edge|nginx' || true",
+    "echo '=== LISTENERS ==='",
+    "ss -lntp 2>/dev/null | grep -E ':(80|443|3000|3001|8787|8080|8081)\\b' || true",
+    "echo '=== EDGE LOGS ==='",
+    "docker logs --tail 120 stambol-edge 2>&1 || true",
+    "echo '=== DOGU RECOVERY LOGS ==='",
+    "docker logs --tail 80 dogu-recovery-mcp 2>&1 || true",
+    "echo '=== CANDIDATE DOGU LOGS ==='",
+    "for n in $(docker ps -a --format '{{.Names}}' | grep -Ei 'dogu|mcp' | head -20); do echo ---$n---; docker logs --tail 60 $n 2>&1 || true; done"
+  ].join("; ");
 
-  return Response.json({
-    ok: true,
-    service: "rescue-ssh-mcp",
-    version: "0.2.0",
-    dogu: { mcp, mcpMeta, consoleMeta }
-  }, {
-    headers: { "cache-control": "no-store" }
-  });
+  try {
+    const result = await runSsh(command, 75);
+    return Response.json({ ok: true, result }, {
+      headers: { "cache-control": "no-store" }
+    });
+  } catch (error) {
+    return Response.json(
+      { ok: false, error: error instanceof Error ? error.message : String(error) },
+      { status: 500, headers: { "cache-control": "no-store" } }
+    );
+  }
 }
