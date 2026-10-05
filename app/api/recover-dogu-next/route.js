@@ -14,9 +14,10 @@ export async function GET(request) {
   const command = [
     "set -e",
     "test -x /usr/local/sbin/dogu-next-recreate-safe",
-    "/usr/local/sbin/dogu-next-recreate-safe",
-    "sleep 2",
-    "docker inspect dogu-next-app --format 'status={{.State.Status}} started={{.State.StartedAt}} restart={{.RestartCount}}'",
+    "printf '%s\\n' '--- recreate-safe'; sed -n '1,220p' /usr/local/sbin/dogu-next-recreate-safe",
+    "printf '%s\\n' '--- run'; /usr/local/sbin/dogu-next-recreate-safe",
+    "sleep 5",
+    "printf '%s\\n' '--- state'; docker inspect dogu-next-app --format 'status={{.State.Status}} started={{.State.StartedAt}} restart={{.RestartCount}}'",
     "readlink -f /opt/vps-stack/apps/dogu-next/current"
   ].join("; ");
 
