@@ -1,4 +1,4 @@
-import { runSsh } from "../../../../src/ssh.js";
+import { runSsh } from "../../../src/ssh.js";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
