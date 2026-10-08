@@ -10,7 +10,7 @@ export async function GET(request){
  let lastError=null;
  for(let attempt=1;attempt<=2;attempt++){
   try{
-   const r=await runSsh(COMMANDS[action],14);
+   const r=await runSsh(COMMANDS[action],60);
    return Response.json({ok:r.exitCode===0,attempt,action,exitCode:r.exitCode,stdout:r.stdout,stderr:r.stderr},{headers:{"cache-control":"no-store"}});
   }catch(e){lastError={code:e.code||null,error:String(e.message||e)}}
  }
