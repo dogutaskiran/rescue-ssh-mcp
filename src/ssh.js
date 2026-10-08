@@ -58,9 +58,9 @@ export async function runSsh(command, requestedTimeoutSeconds) {
       port: cfg.port,
       username: cfg.username,
       privateKey: cfg.privateKey,
-      readyTimeout: 15000,
-      keepaliveInterval: 5000,
-      keepaliveCountMax: 3
+      readyTimeout: 60000,
+      keepaliveInterval: 15000,
+      keepaliveCountMax: 12
     };
 
     if (cfg.hostKeySha256) {
