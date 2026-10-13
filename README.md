@@ -82,7 +82,7 @@ Keep read-only calls short; for work exceeding 15 seconds, use the Rescue timeou
 
 ### Retirement of the Longevity Compose service (one-time, approved)
 
-**Status as of 2026-10-13:** `surface-longevity` container had already been removed, **but** `/opt/vps-stack/compose.yml` still declared the `longevity` service (originally lines 30–46) with Traefik route `longevity.kvar.one`. Removing the declaration is an independent configuration-only change.
+**Completed and verified on 2026-10-13:** removed `services.longevity` from `/opt/vps-stack/compose.yml` (688 bytes) after backing up the original to `/opt/vps-stack/compose.yml.pre-longevity-removal-20261013.bak`. Verified `docker compose -f /opt/vps-stack/compose.yml config -q` returned exit 0; no `longevity` service, route or `surface-longevity` container remains. Doğu One, OpenBao, PostgreSQL and MailMesh remained running. This was performed via an approved narrow `hostinger.host.exec` SSH command without restarting any containers or disabling the self-runtime guard. The procedure below is retained for reference and is safe to run again because it checks for an already-absent service.
 
 **Scope:** delete **only** `services.longevity`. Do not touch `avenora`, `loadout`, `dogu-next-app`, `deployd`, or any other service; do not invoke `compose up`, `compose down`, `restart`, or `docker system prune --volumes`. A backup and a validated parse are mandatory.
 
