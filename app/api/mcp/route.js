@@ -13,10 +13,9 @@ function text(value) {
 
 const mcpHandler = createMcpHandler(
   (server) => {
-    server.tool(
+    server.registerTool(
       "ssh_health",
-      "Read-only SSH smoke test against the single configured rescue host.",
-      {},
+      { title: "SSH health", description: "Read-only SSH smoke test against the single configured rescue host.", inputSchema: z.object({}) },
       async () => {
         try {
           const result = await runSsh(
@@ -37,12 +36,15 @@ const mcpHandler = createMcpHandler(
       }
     );
 
-    server.tool(
+    server.registerTool(
       "ssh_exec",
-      "Execute a shell command over SSH on the single configured rescue host. This may modify system state.",
       {
-        command: z.string().min(1).max(8000),
-        timeoutSeconds: z.number().int().min(1).max(300).optional()
+        title: "SSH exec",
+        description: "Execute a shell command over SSH on the single configured rescue host. This may modify system state.",
+        inputSchema: z.object({
+          command: z.string().min(1).max(8000),
+          timeoutSeconds: z.number().int().min(1).max(300).optional()
+        })
       },
       async ({ command, timeoutSeconds }) => {
         try {
@@ -65,8 +67,6 @@ const mcpHandler = createMcpHandler(
       }
     );
   },
-  {},
-  { basePath: "/api" }
 );
 
 function suppliedSecret(request) {
